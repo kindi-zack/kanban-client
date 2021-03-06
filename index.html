@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+    name="google-signin-client_id"
+    content="1019996740535-taktujs76p2h1aqbdhq2rmtokvu74luf.apps.googleusercontent.com"
+    />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+
+    <title>Kanban</title>
+</head>
+<body>
+    <div id='app' class="container">
+      <nav>
+        <div class="navbar navbar-light bg-secondary">
+          <div class="container ">
+            <a href="#" class="navbar-brand" @click.prevent="kanbanLogo()">
+              <strong>Kanban Board</strong><br>
+              <i v-if="page === 'home' || page === 'addTask'" font-size="10px">{{username}}</i>
+            </a>
+            
+            <div class="" v-if="page === 'home' || page === 'addTask' || page === 'updateTask'">
+              <button class="btn btn-outline-dark" @click.prevent="changePage('addTask')">New Task</button>
+              <button class="btn btn-outline-light" @click.prevent="logout()">Logout</button>
+            </div>
+          </div>
+        </div>
+     </nav>
+
+      <main >
+        <!-- Login Form -->
+        <div class="col-3 mx-auto" id="login-page" v-if="page === 'login'">
+          <h2>Login</h2>
+          <form id="login-form" @submit.prevent="loginSubmit()">
+            <div class="mb-2">
+              <input type="email" class="" id="login-email" placeholder="name@example.com" v-model="dataLogin.email">
+              <label for="login-email">Email address</label>
+            </div>
+            <div class="mb-3">
+              <input type="password" class="" id="login-password" placeholder="Password" v-model="dataLogin.password">
+              <label for="login-password">Password</label>
+            </div>
+            <input class="btn btn-outline-dark" type="submit" value="Login">
+          </form>
+             <!-- GOOGLE LOGIN -->
+
+          <h6>Don't have account? <a href="#" id='show-reg' @click.prevent="changePage('register')">Register</a> here!</h6>
+        </div>
+
+        <!-- Register Form -->
+        <div class="col-3 mx-auto" id="reg-page" v-if="page === 'register'">
+          <h2>Register</h2>
+          <form id="reg-form" @submit.prevent="fetchRegister()">
+            <div class="">
+              <input type="text" class="" id="reg-username" placeholder="username" v-model="dataRegister.username">
+              <label for="">Username</label>
+            </div>
+            <div class="">
+              <input type="email" class="" id="reg-email" placeholder="name@example.com" v-model="dataRegister.email">
+              <label for="">Email address</label>
+            </div>
+            <div class="">
+              <input type="password" class="" id="reg-password" placeholder="Password" v-model="dataRegister.password">
+              <label for="">Password</label>
+            </div>
+            <input class="btn btn-outline-dark" type="submit" value="Register">
+          </form><br>
+          <h6>Already have account? <a href="#" id="show-login" @click.prevent="changePage('login')">Login</a> here!</h6>
+        </div>
+        <div v-if="page === 'login' || page === 'register'" class="g-signin2" data-onsuccess="onSignIn"></div>
+
+        <!-- Add Task Form -->
+        <div v-if="page === 'addTask'" class="col-6 mx-auto">
+          <h5>Add Task</h5>
+          <form @submit.prevent="addSubmit()">
+            <div class="">
+              <label class="" for="">Title</label><br>
+              <input type="text" class="" id="add-title" placeholder="title" v-model="inputTask.title">
+            </div>
+            <div class="">
+              <label for="">Description</label><br>
+              <input type="text" name="" id="add-desciption" placeholder="Description" v-model="inputTask.description">
+            </div>
+            <div class="">
+              <label class="">Category</label><br>
+              <select class="" v-model='inputTask.category'>
+                <option selected>--- Please select ---</option>
+                <option value="Backlog">Backlog</option>
+                <option value="To Do">To Do</option>
+                <option value="Doing">Doing</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>   
+            <button type="submit" class="btn btn-outline-dark">Submit</button>
+          </form>
+        </div><br><br>
+
+        <!-- Update Task Form -->
+        <div v-if="page === 'updateTask'" class="col-6 mx-auto">
+          <h5>Update Task</h5>
+          <form >
+            <div class="">
+              <label class="" for="">Title</label><br>
+              <input type="text" class="" id="update-title" placeholder="">
+            </div>
+            <div class="">
+              <label for="">Description</label><br>
+              <input type="text" name="" id="update-desciption" placeholder="Description" v-model="inputTask.description">
+            </div>
+            <div class="">
+              <label class="">Category</label><br>
+              <select class="" >
+                <option selected>--- Please select ---</option>
+                <option value="Backlog">Backlog</option>
+                <option value="To Do">To Do</option>
+                <option value="Doing">Doing</option>
+                <option value="Done">Done</option>
+              </select>
+            </div>   
+            <button type="submit" class="btn btn-outline-dark">Update</button>
+          </form>
+        </div> 
+        <br> <br>
+
+
+        <!-- Kanban Board -->
+        <div v-if="page === 'home'" class="container row mx-auto">
+          <div class="col-3" v-for = "(item, index) in categories">
+            <div class="card">
+              <div class="card-header">{{item}}</div>
+              <div class="card-body" v-for="taskItem in taskDB" v-if="categories[index] === taskItem.category">
+                
+                  <div class="card">
+                    <strong class="card-header">{{taskItem.id}} {{taskItem.title}}</strong>
+                    <p >{{taskItem.description}}</p>
+                    <div class="">
+                      <button class="btn btn-outline-dark" @click.prevent="deleteTask(taskItem.id)">Delete</button>
+                      <button class="btn btn-dark" @click.prevent="updateBtn(taskItem.id)">Edit</button>
+                    </div>
+                  </div>
+                
+              </div>
+            </div>
+          </div>
+
+          <!-- <div class="col-3">
+            <div class="card">
+              <div class="card-header">TO DO</div>
+              <div class="card-body">
+                
+              </div>
+            </div>
+          </div>
+
+          <div class="col-3">
+            <div class="card">
+              <div class="card-header">Doing</div>
+              <div class="card-body">
+                
+              </div>
+            </div>
+          </div>
+
+          <div class="col-3">
+            <div class="card">
+              <div class="card-header">DONE</div>
+              <div class="card-body">
+               
+              </div>
+            </div>
+          </div> -->
+        </div>
+      </main>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src='./main.js'></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+  </body>
+</html>
